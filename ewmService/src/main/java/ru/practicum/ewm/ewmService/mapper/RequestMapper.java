@@ -9,14 +9,14 @@ import ru.practicum.ewm.ewmService.model.user.User;
 @UtilityClass
 public class RequestMapper {
 
-    public static Request toParticipationRequest(Event event, User requester) {
+    public static Request toRequest(Event event, User requester) {
         return Request.builder()
                 .event(event)
                 .requester(requester)
                 .build();
     }
 
-    public static RequestDto toParticipationRequestDto(Request request) {
+    public static RequestDto toRequestDto(Request request) {
         return RequestDto.builder()
                 .status(request.getStatus())
                 .created(request.getCreated())

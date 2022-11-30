@@ -2,6 +2,7 @@ package ru.practicum.ewm.ewmService.service.impl;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import ru.practicum.ewm.ewmService.controller.eventRequests.GetAllAdminRequest;
 import ru.practicum.ewm.ewmService.controller.eventRequests.GetAllRequest;
 import ru.practicum.ewm.ewmService.exception.ForbiddenException;
@@ -64,12 +65,12 @@ public class EventServiceImpl implements EventService {
         List<Predicate> predicates = new ArrayList<>();
         predicates.add(cb.equal(event.get("state"), State.PUBLISHED));
 
-        if (getAllEventsRequest.getText() != null) {
+        if (getAllEventsRequest.getText() != null && !getAllEventsRequest.getText().isEmpty()) {
             predicates.add(cb.or(cb.like(cb.lower(event.get("annotation")), getAllEventsRequest.getText().toLowerCase()),
                     cb.like(cb.lower(event.get("description")), getAllEventsRequest.getText().toLowerCase())));
         }
-        if (getAllEventsRequest.getCategories() != null) {
-            cq.select(event).where(event.get("category").get("id").in(getAllEventsRequest.getCategories()));
+        if (!CollectionUtils.isEmpty(getAllEventsRequest.getCategories())) {
+            predicates.add(event.get("category").get("id").in(getAllEventsRequest.getCategories()));
         }
         if (getAllEventsRequest.getPaid() != null) {
             predicates.add(cb.equal(event.get("paid"), getAllEventsRequest.getPaid()));
@@ -81,14 +82,13 @@ public class EventServiceImpl implements EventService {
             predicates.add(cb.lessThan(event.get("eventDate"), getAllEventsRequest.getRangeEnd()));
         }
         if (getAllEventsRequest.getOnlyAvailable() != null && getAllEventsRequest.getOnlyAvailable()) {
-            predicates.add(cb.and(cb.equal(event.get("participantLimit"), 0), getRequestsPredicate(cb, cq, event)));
+            predicates.add(cb.or(cb.equal(event.get("participantLimit"), 0), getRequestsPredicate(cb, cq, event)));
+        }
+        if (getAllEventsRequest.getSort() == null) {
+            cq.orderBy(cb.desc(event.get("id")));
         }
         if (getAllEventsRequest.getSort() == SortEvents.EVENT_DATE) {
             cq.orderBy(cb.asc(event.get("eventDate")));
-        }
-
-        if (getAllEventsRequest.getSort() == null) {
-            cq.orderBy(cb.desc(event.get("id")));
         }
 
         cq.select(event).where(predicates.toArray(new Predicate[]{}));
@@ -102,7 +102,7 @@ public class EventServiceImpl implements EventService {
 
         if (getAllEventsRequest.getSort() == SortEvents.VIEWS) {
             return eventShortDto.stream()
-                    .sorted(Comparator.comparingLong(EventShortDto::getViews))
+                    .sorted(Comparator.comparingLong(EventShortDto::getViews).reversed())
                     .collect(Collectors.toList());
         }
         return eventShortDto;
@@ -175,7 +175,7 @@ public class EventServiceImpl implements EventService {
         Event event = repository.findByIdAndInitiatorId(id, userId)
                 .orElseThrow(() -> new NotFoundException(String.format(EVENT_NOT_FOUND_BY_USER, id, userId)));
         return requestRepository.findAllByEventId(event.getId()).stream()
-                .map(RequestMapper::toParticipationRequestDto)
+                .map(RequestMapper::toRequestDto)
                 .collect(Collectors.toList());
     }
 
@@ -202,17 +202,17 @@ public class EventServiceImpl implements EventService {
                 requestRepository.save(r);
             }
         }
-        return RequestMapper.toParticipationRequestDto(request);
+        return RequestMapper.toRequestDto(request);
     }
 
     @Transactional
     @Override
-    public RequestDto rejectRequests(Long id, Long userId, Long reqId) {
+    public RequestDto rejectRequest(Long id, Long userId, Long reqId) {
         Request request = requestRepository.findByIdAndEventIdAndEventInitiatorId(reqId, id, userId)
                 .orElseThrow(() -> new NotFoundException(String.format(REQUEST_NOT_FOUND +
                         " for event %d created by user %d", reqId, id, userId)));
         request.setStatus(StateRequest.REJECTED);
-        return RequestMapper.toParticipationRequestDto(requestRepository.save(request));
+        return RequestMapper.toRequestDto(requestRepository.save(request));
     }
 
     @Override
@@ -222,18 +222,14 @@ public class EventServiceImpl implements EventService {
         Root<Event> event = cq.from(Event.class);
         List<Predicate> predicates = new ArrayList<>();
 
-        if (getAllAdminRequest.getUsers() != null && !getAllAdminRequest.getUsers().isEmpty()) {
-            cq.select(event).where(event.get("initiator").get("id").in(getAllAdminRequest.getUsers()));
+        if (!CollectionUtils.isEmpty(getAllAdminRequest.getUsers())) {
+            predicates.add(event.get("initiator").get("id").in(getAllAdminRequest.getUsers()));
         }
-
-        if (getAllAdminRequest.getUsers() != null && !getAllAdminRequest.getUsers().isEmpty()) {
-            cq.select(event).where(event.get("initiator").get("id").in(getAllAdminRequest.getUsers()));
+        if (!CollectionUtils.isEmpty(getAllAdminRequest.getCategories())) {
+            predicates.add(event.get("category").get("id").in(getAllAdminRequest.getCategories()));
         }
-        if (getAllAdminRequest.getCategories() != null && !getAllAdminRequest.getCategories().isEmpty()) {
-            cq.select(event).where(event.get("category").get("id").in(getAllAdminRequest.getCategories()));
-        }
-        if (getAllAdminRequest.getStates() != null && !getAllAdminRequest.getStates().isEmpty()) {
-            cq.select(event).where(event.get("state").in(getAllAdminRequest.getStates()));
+        if (!CollectionUtils.isEmpty(getAllAdminRequest.getStates())) {
+            predicates.add(event.get("state").in(getAllAdminRequest.getStates()));
         }
         if (getAllAdminRequest.getRangeStart() != null) {
             predicates.add(cb.greaterThan(event.get("eventDate"), getAllAdminRequest.getRangeStart()));
@@ -265,8 +261,8 @@ public class EventServiceImpl implements EventService {
     public EventFullDto publishEvent(Long id) {
         Event event = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException(String.format(EVENT_NOT_FOUND, id)));
-        if (LocalDateTime.now().plusHours(1).isAfter(event.getEventDate())) {
-            throw new ForbiddenException("Event date must be at least one hour before the publication");
+        if (event.getEventDate().isBefore(LocalDateTime.now().plusHours(1))) {
+            throw new ForbiddenException("Event date must be at least one hour after the publication");
         }
         if (event.getState() != State.PENDING) {
             throw new ForbiddenException("Event status can't be changed");
@@ -289,9 +285,9 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventShortDto> convertToListEventShortDto(List<Event> events, Boolean uniqRequests) {
+    public List<EventShortDto> convertToListEventShortDto(List<Event> events, Boolean uniqueRequests) {
         Map<Long, Long> confirmedRequests = getConfirmedRequests(events);
-        Map<Long, Long> views = statService.getViewsForEvents(events, uniqRequests);
+        Map<Long, Long> views = statService.getViewsForEvents(events, uniqueRequests);
         return events.stream()
                 .map(event -> EventMapper.toEventShortDto(event,
                         confirmedRequests.get(event.getId()),
@@ -302,15 +298,6 @@ public class EventServiceImpl implements EventService {
     private List<EventFullDto> convertToListEventFullDto(List<Event> events, Boolean uniqueRequests) {
         Map<Long, Long> confirmedRequests = getConfirmedRequests(events);
         Map<Long, Long> views = statService.getViewsForEvents(events, uniqueRequests);
-        try {
-            for (Event event : events) {
-                EventMapper.toEventFullDto(event,
-                        confirmedRequests.get(event.getId()),
-                        views.get(event.getId()));
-            }
-        } catch (NullPointerException e) {
-            e.printStackTrace();
-        }
         return events.stream()
                 .map(event -> EventMapper.toEventFullDto(event,
                         confirmedRequests.get(event.getId()),

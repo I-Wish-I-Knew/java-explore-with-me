@@ -28,7 +28,7 @@ public interface EventService {
 
     RequestDto confirmRequest(Long id, Long userId, Long reqId);
 
-    RequestDto rejectRequests(Long id, Long userId, Long reqId);
+    RequestDto rejectRequest(Long id, Long userId, Long reqId);
 
     List<EventFullDto> getAllAdmin(GetAllAdminRequest getAllAdminRequest);
 

@@ -20,68 +20,64 @@ import java.util.List;
 @Slf4j
 @RestControllerAdvice
 public class ErrorHandler {
-
-    private String reason;
-    private HttpStatus status;
-
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleNotFound(NotFoundException e) {
-        reason = "NotFoundException";
-        status = HttpStatus.NOT_FOUND;
-        e.printStackTrace();
         log.error(e.getMessage(), e);
-        return new ErrorResponse(e.getMessage(), reason, getErrors(e), status);
+        return new ErrorResponse(e.getMessage(),
+                "NotFoundException",
+                getErrors(e),
+                HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleUnexpectedException(Throwable e) {
-        reason = "Unexpected exception";
-        status = HttpStatus.INTERNAL_SERVER_ERROR;
-        e.printStackTrace();
         log.error(e.getMessage(), e);
-        return new ErrorResponse(e.getMessage(), reason, getErrors(e), status);
+        return new ErrorResponse(e.getMessage(),
+                "Unexpected exception",
+                getErrors(e),
+                HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleMethodArgumentNotValid(MethodArgumentNotValidException e) {
-        reason = "MethodArgumentNotValidException";
-        status = HttpStatus.BAD_REQUEST;
-        e.printStackTrace();
         log.error(e.getMessage(), e);
-        return new ErrorResponse(e.getMessage(), reason, getErrors(e), status);
+        return new ErrorResponse(e.getMessage(),
+                "MethodArgumentNotValidException",
+                getErrors(e),
+                HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleMissingRequestValueException(MissingRequestValueException e) {
-        reason = "MissingRequestValueException";
-        status = HttpStatus.BAD_REQUEST;
-        e.printStackTrace();
         log.error(e.getMessage(), e);
-        return new ErrorResponse(e.getMessage(), reason, getErrors(e), status);
+        return new ErrorResponse(e.getMessage(),
+                "MissingRequestValueException",
+                getErrors(e),
+                HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public ErrorResponse handleForbiddenException(ForbiddenException e) {
-        reason = "ForbiddenException";
-        status = HttpStatus.FORBIDDEN;
-        e.printStackTrace();
         log.error(e.getMessage(), e);
-        return new ErrorResponse(e.getMessage(), reason, getErrors(e), status);
+        return new ErrorResponse(e.getMessage(),
+                "ForbiddenException",
+                getErrors(e),
+                HttpStatus.FORBIDDEN);
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleDataIntegrityViolationException(DataIntegrityViolationException e) {
-        reason = "DataIntegrityViolationException";
-        status = HttpStatus.BAD_REQUEST;
-        e.printStackTrace();
         log.error(e.getMessage(), e);
-        return new ErrorResponse(e.getMessage(), reason, getErrors(e), status);
+        return new ErrorResponse(e.getMessage(),
+                "DataIntegrityViolationException",
+                getErrors(e),
+                HttpStatus.BAD_REQUEST);
     }
 
     private List<String> getErrors(Throwable e) {

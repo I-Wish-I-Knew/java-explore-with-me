@@ -47,6 +47,7 @@ public class StatServiceImpl implements StatService {
         Map<Long, Long> eventViews = new HashMap<>();
 
         viewPoints.forEach(viewPoint -> eventViews.put(getIdFromUri(viewPoint.getUri()), viewPoint.getHits()));
+
         return eventViews;
     }
 

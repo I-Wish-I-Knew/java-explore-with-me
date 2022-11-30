@@ -27,7 +27,6 @@ services:
       - ewm-db
     environment:
       - spring.datasource.url=jdbc:postgresql://ewm-db:5432/ewm
-#      - statisticService.url=http://stats-server:9090
       - STATISTICSERVICE_URL=http://stats-server:9090
 
   ewm-db:

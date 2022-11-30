@@ -37,7 +37,7 @@ public class NewEventDto {
     private Integer participantLimit;
     private Boolean requestModeration;
 
-    @AssertTrue(message = "Event date must be at least two hours before the publication")
+    @AssertTrue(message = "Event date must be at least two hours after the publication")
     private boolean isAfter() {
         LocalDateTime acceptableTime = LocalDateTime.now().plusHours(2);
         return eventDate.isEqual(acceptableTime) || eventDate.isAfter(acceptableTime);

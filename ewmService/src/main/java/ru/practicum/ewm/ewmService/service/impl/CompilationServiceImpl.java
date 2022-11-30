@@ -62,14 +62,15 @@ public class CompilationServiceImpl implements CompilationService {
 
     @Transactional
     @Override
-    public NewCompilationDto save(NewCompilationDto newCompilationDto) {
+    public CompilationDto save(NewCompilationDto newCompilationDto) {
         List<Long> ids = new ArrayList<>(newCompilationDto.getEvents()).stream()
                 .map(NewCompilationDto.Event::getId)
                 .collect(Collectors.toList());
         Set<Event> events = new HashSet<>(eventRepository.findAllByIdIn(ids));
         Compilation compilation = CompilationMapper.toCompilation(newCompilationDto, events);
         compilation = repository.save(compilation);
-        return CompilationMapper.toNewCompilationDto(compilation);
+        return CompilationMapper.toCompilationDto(compilation,
+                eventService.convertToListEventShortDto(new ArrayList<>(compilation.getEvents()), false));
     }
 
     @Transactional

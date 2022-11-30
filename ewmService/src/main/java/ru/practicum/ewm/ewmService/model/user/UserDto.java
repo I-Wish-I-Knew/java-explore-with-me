@@ -1,12 +1,16 @@
 package ru.practicum.ewm.ewmService.model.user;
 
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 
-@Data
+@Setter
+@Getter
+@ToString
+@AllArgsConstructor
+@NoArgsConstructor
+@EqualsAndHashCode
 @Builder
 public class UserDto {
     private Long id;

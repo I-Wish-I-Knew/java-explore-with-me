@@ -25,7 +25,6 @@ public class CategoryController {
 
     @PostMapping("/admin/categories")
     public CategoryDto save(@RequestBody @Valid CategoryDto categoryDto) {
-
         log.info("Save category {}", categoryDto);
         return service.save(categoryDto);
     }

@@ -11,14 +11,12 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class StatServiceImpl implements StatService {
-
     private final StatRepository repository;
+    private final String APP = "ewm";
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public StatServiceImpl(StatRepository repository) {
@@ -40,25 +38,18 @@ public class StatServiceImpl implements StatService {
             return new ArrayList<>();
         }
 
-        Map<String, Long> hits = new HashMap<>();
-        Map<String, String> apps = new HashMap<>();
+        List<ViewPoints> viewPoints = Boolean.TRUE.equals(unique) ? repository.countByTimestampAndUriSAndIpUnique(startTime, endTime, uris) :
+                repository.countByTimestampAndUris(startTime, endTime, uris);
 
-        for (Object[] ob : repository.findApps(uris)) {
-            apps.put((String) ob[0], (String) ob[1]);
-        }
-        if (Boolean.FALSE.equals(unique)) {
-            for (String uri : uris) {
-                hits.put(uri, repository.countByTimestampAfterAndTimestampBeforeAndUri(startTime, endTime, uri));
-            }
-        } else {
-            for (String uri : uris) {
-                hits.put(uri, repository.countByTimestampAndUriAndIpUnique(startTime, endTime, uri));
+        for (String uri : uris) {
+            if (viewPoints.stream().noneMatch(vp -> vp.getUri().equals(uri))) {
+                viewPoints.add(ViewPoints.builder()
+                        .hits(0L)
+                        .uri(uri)
+                        .app(APP)
+                        .build());
             }
         }
-
-        List<ViewPoints> viewPoints = new ArrayList<>();
-
-        hits.keySet().forEach(uri -> viewPoints.add(StatMapper.toViewPoints(apps.get(uri), uri, hits.get(uri))));
         return viewPoints;
     }
 

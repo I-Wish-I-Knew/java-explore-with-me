@@ -41,8 +41,17 @@ public class EventController {
                                       @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
                                       @RequestParam(defaultValue = "10") @Positive Integer size,
                                       HttpServletRequest request) {
-        GetAllRequest req = GetAllRequest.of(text, categories, paid, rangeStart, rangeEnd,
-                onlyAvailable, sort, from, size);
+        GetAllRequest req = GetAllRequest.builder()
+                .text(text)
+                .categories(categories)
+                .paid(paid)
+                .rangeStart(rangeStart)
+                .rangeEnd(rangeEnd)
+                .onlyAvailable(onlyAvailable)
+                .sort(sort)
+                .from(from)
+                .size(size)
+                .build();
         log.info("Get all events with filters {}", req);
         return service.getAll(req, request);
     }
@@ -110,7 +119,7 @@ public class EventController {
                                     @PathVariable Long eventId,
                                     @PathVariable Long reqId) {
         log.info("Reject request {} for event {} by user {}", reqId, eventId, userId);
-        return service.rejectRequests(eventId, userId, reqId);
+        return service.rejectRequest(eventId, userId, reqId);
     }
 
     @GetMapping("/admin/events")
@@ -123,7 +132,15 @@ public class EventController {
                                           @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
                                           @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
                                           @RequestParam(defaultValue = "10") @Positive Integer size) {
-        GetAllAdminRequest req = GetAllAdminRequest.of(users, states, categories, rangeStart, rangeEnd, from, size);
+        GetAllAdminRequest req = GetAllAdminRequest.builder()
+                .users(users)
+                .states(states)
+                .categories(categories)
+                .rangeStart(rangeStart)
+                .rangeEnd(rangeEnd)
+                .from(from)
+                .size(size)
+                .build();
         log.info("Get all events by admin with filters {}", req);
         return service.getAllAdmin(req);
     }

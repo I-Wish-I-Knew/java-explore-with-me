@@ -4,12 +4,12 @@ import lombok.*;
 
 import javax.persistence.*;
 
-@Getter
 @Setter
+@Getter
 @ToString
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @Entity
 @Table(name = "categories")
 public class Category {

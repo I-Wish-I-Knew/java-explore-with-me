@@ -38,7 +38,7 @@ public class CompilationController {
     }
 
     @PostMapping("/admin/compilations")
-    public NewCompilationDto save(@RequestBody @Valid NewCompilationDto newCompilationDto) {
+    public CompilationDto save(@RequestBody @Valid NewCompilationDto newCompilationDto) {
         log.info("Save events compilation {}", newCompilationDto);
         return service.save(newCompilationDto);
     }

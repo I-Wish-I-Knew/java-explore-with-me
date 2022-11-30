@@ -41,7 +41,7 @@ public class RequestServiceImpl implements RequestService {
     public List<RequestDto> getAll(Long userId) {
         List<Request> requests = repository.findAllByRequesterId(userId);
         return requests.stream()
-                .map(RequestMapper::toParticipationRequestDto)
+                .map(RequestMapper::toRequestDto)
                 .collect(Collectors.toList());
     }
 
@@ -52,41 +52,45 @@ public class RequestServiceImpl implements RequestService {
                 .orElseThrow(() -> new NotFoundException(String.format("User with id=%d was not found", userId)));
         Event event = eventRepository.findByIdAndState(eventId, State.PUBLISHED)
                 .orElseThrow(() -> new NotFoundException(String.format("Published event with id=%d was not found", eventId)));
+
         if (Objects.equals(event.getInitiator().getId(), userId)) {
             throw new ForbiddenException(String.format("User %d is an initiator of event %d", userId, eventId));
         }
+
         if (Boolean.TRUE.equals(repository.existsByEventIdAndRequesterId(eventId, userId))) {
             throw new AlreadyExistsException(String.format("User %d has already sent a request for event %d",
                     userId, eventId));
         }
 
-        Request request = RequestMapper.toParticipationRequest(event, requester);
+        Request request = RequestMapper.toRequest(event, requester);
         request.setCreated(LocalDateTime.now());
 
         if (event.getParticipantLimit() == null || event.getParticipantLimit().equals(0)
                 && Boolean.FALSE.equals(event.getRequestModeration())) {
+
             request.setStatus(StateRequest.CONFIRMED);
+
         } else if (Objects.equals(event.getParticipantLimit(),
-                repository.countAllByStatusAndEventId(StateRequest.CONFIRMED, eventId))) {
+                repository.countAllByStatusAndEventId(StateRequest.CONFIRMED, eventId)) &&
+                !event.getParticipantLimit().equals(0)) {
+
             request.setStatus(StateRequest.REJECTED);
             eventRepository.save(event);
             throw new ForbiddenException(String.format("Participants limit for event %d has been reached", eventId));
+
         } else {
             request.setStatus(StateRequest.PENDING);
         }
 
-        return RequestMapper.toParticipationRequestDto(repository.save(request));
+        return RequestMapper.toRequestDto(repository.save(request));
     }
 
     @Transactional
     @Override
     public RequestDto cancel(Long userId, Long requestId) {
-        Request request = repository.findById(requestId)
+        Request request = repository.findByIdAndRequesterId(requestId, userId)
                 .orElseThrow(() -> new NotFoundException(String.format(REQUEST_NOT_FOUND, requestId)));
-        if (!Objects.equals(request.getRequester().getId(), userId)) {
-            throw new ForbiddenException(String.format("User %d has no access to request %d", userId, requestId));
-        }
         request.setStatus(StateRequest.CANCELED);
-        return RequestMapper.toParticipationRequestDto(repository.save(request));
+        return RequestMapper.toRequestDto(repository.save(request));
     }
 }

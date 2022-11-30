@@ -18,17 +18,15 @@ import java.util.List;
 @RestControllerAdvice
 public class ErrorHandler {
 
-    private String reason;
-    private HttpStatus status;
-
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleUnexpectedException(Throwable e) {
-        reason = "Unexpected exception";
-        status = HttpStatus.INTERNAL_SERVER_ERROR;
-        e.printStackTrace();
         log.error(e.getMessage(), e);
-        return new ErrorResponse(e.getMessage(), reason, getErrors(e), status, Timestamp.valueOf(LocalDateTime.now()));
+        return new ErrorResponse(e.getMessage(),
+                "Unexpected exception",
+                getErrors(e),
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                Timestamp.valueOf(LocalDateTime.now()));
     }
 
     private List<String> getErrors(Throwable e) {

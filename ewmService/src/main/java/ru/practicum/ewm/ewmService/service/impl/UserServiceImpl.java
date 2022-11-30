@@ -2,6 +2,7 @@ package ru.practicum.ewm.ewmService.service.impl;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import ru.practicum.ewm.ewmService.mapper.UserMapper;
 import ru.practicum.ewm.ewmService.model.user.User;
 import ru.practicum.ewm.ewmService.model.user.UserDto;
@@ -24,12 +25,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserDto> getAll(List<Long> ids, int from, int size) {
-        List<User> users;
-        if (ids != null && !ids.isEmpty()) {
-            users = repository.findAllById(ids);
-        } else {
-            users = repository.findAll(Page.of(from, size)).getContent();
-        }
+        List<User> users = CollectionUtils.isEmpty(ids) ? repository.findAll(Page.of(from, size)).getContent() :
+                repository.findAllById(ids);
+
+
         return users.stream()
                 .map(UserMapper::toUserDto)
                 .collect(Collectors.toList());
