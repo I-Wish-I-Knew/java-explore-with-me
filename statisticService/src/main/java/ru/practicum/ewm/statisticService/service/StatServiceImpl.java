@@ -16,7 +16,7 @@ import java.util.List;
 @Service
 public class StatServiceImpl implements StatService {
     private final StatRepository repository;
-    private final String APP = "ewm";
+    private static final String APP = "ewm";
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public StatServiceImpl(StatRepository repository) {
