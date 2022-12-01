@@ -27,7 +27,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.criteria.*;
 import javax.servlet.http.HttpServletRequest;
-import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -317,7 +316,7 @@ public class EventServiceImpl implements EventService {
         return participantLimit != 0 && participantLimit == confirmedRequests;
     }
 
-    private Event updateEventFields(Event event, @NotNull UpdateEventRequest updateEventRequest) {
+    private Event updateEventFields(Event event, UpdateEventRequest updateEventRequest) {
         String annotation = updateEventRequest.getAnnotation();
         String title = updateEventRequest.getTitle();
         Long categoryId = updateEventRequest.getCategory();
@@ -352,7 +351,7 @@ public class EventServiceImpl implements EventService {
         return event;
     }
 
-    private Event updateEventFieldsAdmin(Event event, @NotNull NewEventDto eventDto) {
+    private Event updateEventFieldsAdmin(Event event, NewEventDto eventDto) {
         String annotation = eventDto.getAnnotation();
         String title = eventDto.getTitle();
         Long categoryId = eventDto.getCategory();

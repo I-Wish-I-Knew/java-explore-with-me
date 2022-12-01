@@ -17,7 +17,7 @@ import static ru.practicum.ewm.ewmService.utility.Constants.DATE_FORMAT_PATTERN;
 @Jacksonized
 public class NewEventDto {
     private Long id;
-    @Size(min = 20, max = 7000)
+    @Size(min = 20, max = 2000)
     @NotBlank
     private String annotation;
     @Size(min = 3, max = 120)
