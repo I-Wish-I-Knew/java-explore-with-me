@@ -227,6 +227,8 @@ class EventServiceImplTest {
         Event event1 = repository.save(createEvent(1L, category1, user1, State.PUBLISHED));
         Event event2 = repository.save(createEvent(2L, category1, user1, State.PUBLISHED));
         Event event3 = repository.save(createEvent(3L, category2, user2, State.PUBLISHED));
+        Event event4 = repository.save(createEvent(4L, category2, user2, State.PUBLISHED));
+        event4.setOnlyInvited(true);
 
         event2.setParticipantLimit(1);
         requestRepository.save(Request.builder()
@@ -251,7 +253,8 @@ class EventServiceImplTest {
         assertThat(events).hasSize(2)
                 .contains(EventMapper.toEventShortDto(event1, 0, 0))
                 .contains(EventMapper.toEventShortDto(event3, 0, 0))
-                .doesNotContain(EventMapper.toEventShortDto(event2, 0, 0));
+                .doesNotContain(EventMapper.toEventShortDto(event2, 0, 0))
+                .doesNotContain(EventMapper.toEventShortDto(event4, 0, 0));
     }
 
     @Test

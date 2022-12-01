@@ -20,6 +20,7 @@ public class EventMapper {
                 .paid(newEventDto.getPaid())
                 .participantLimit(newEventDto.getParticipantLimit())
                 .requestModeration(newEventDto.getRequestModeration())
+                .onlyInvited(newEventDto.getOnlyInvited())
                 .build();
     }
 
@@ -55,6 +56,7 @@ public class EventMapper {
                 .publishedOn(event.getPublishedOn())
                 .participantLimit(event.getParticipantLimit())
                 .state(event.getState())
+                .onlyInvited(event.getOnlyInvited())
                 .build();
     }
 
@@ -70,6 +72,7 @@ public class EventMapper {
                 .paid(event.getPaid())
                 .participantLimit(event.getParticipantLimit())
                 .requestModeration(event.getRequestModeration())
+                .onlyInvited(event.getOnlyInvited())
                 .build();
     }
 }
