@@ -31,7 +31,8 @@ public class RequestServiceImpl implements RequestService {
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
 
-    public RequestServiceImpl(RequestRepository repository, UserRepository userRepository, EventRepository eventRepository) {
+    public RequestServiceImpl(RequestRepository repository, UserRepository userRepository,
+                              EventRepository eventRepository) {
         this.repository = repository;
         this.userRepository = userRepository;
         this.eventRepository = eventRepository;
@@ -57,7 +58,7 @@ public class RequestServiceImpl implements RequestService {
             throw new ForbiddenException(String.format("User %d is an initiator of event %d", userId, eventId));
         }
 
-        if (event.getOnlyInvited()) {
+        if (Boolean.TRUE.equals(event.getOnlyInvited())) {
             throw new ForbiddenException(String.format("Registration for the event %d is available by invitations only",
                     eventId));
         }
@@ -96,6 +97,8 @@ public class RequestServiceImpl implements RequestService {
         return RequestMapper.toRequestDto(repository.save(request));
     }
 
+    @Transactional
+    @Override
     public void reserveForInvitedGuest(Event event, User guest) {
         checkAlreadyExist(event.getId(), guest.getId());
         Request request = RequestMapper.toRequest(event, guest);
@@ -111,10 +114,13 @@ public class RequestServiceImpl implements RequestService {
         repository.save(request);
     }
 
+    @Transactional
+    @Override
     public void cancelForInvitedGuest(Long eventId, Long guestId) {
         Request request = repository.findByRequesterIdAndEventId(guestId, eventId)
                 .orElseThrow(() -> new NotFoundException(String.format(REQUEST_NOT_FOUND, guestId)));
         request.setStatus(StateRequest.CANCELED);
+        repository.save(request);
     }
 
     private void checkAlreadyExist(Long eventId, Long userId) {

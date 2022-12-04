@@ -22,9 +22,7 @@ import ru.practicum.ewm.ewmService.model.request.StateRequest;
 import ru.practicum.ewm.ewmService.model.user.User;
 import ru.practicum.ewm.ewmService.repository.*;
 import ru.practicum.ewm.ewmService.service.InvitationService;
-import ru.practicum.ewm.ewmService.service.RequestService;
 
-import javax.persistence.EntityManager;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -46,12 +44,9 @@ class InvitationServiceImplTest {
     @Autowired
     private final EventRepository eventRepository;
     @Autowired
-    private final RequestService requestService;
-    @Autowired
     private final RequestRepository requestRepository;
     @Autowired
     private final CategoryRepository categoryRepository;
-    private EntityManager entityManager;
     private User sender;
     private User initiator;
     private User recipient;
@@ -119,10 +114,37 @@ class InvitationServiceImplTest {
                 .status(StateInvitation.NEW)
                 .build());
 
-        List<InvitationDto> invitations = service.getAllSent(sender.getId(), null, null);
+        List<InvitationDto> invitations = service.getAllSent(sender.getId(), null, null, null);
 
         assertThat(invitations).hasSize(2)
                 .contains(InvitationMapper.toInvitationDto(invitation1))
+                .contains(InvitationMapper.toInvitationDto(invitation2));
+    }
+
+    @Test
+    void getAllSentStatus() {
+        Invitation invitation1 = repository.save(Invitation.builder()
+                .sender(sender)
+                .recipient(recipient)
+                .event(event1)
+                .status(StateInvitation.NEW)
+                .build());
+
+        Invitation invitation2 = repository.save(Invitation.builder()
+                .sender(sender)
+                .recipient(recipient)
+                .event(event2)
+                .status(StateInvitation.NEW)
+                .build());
+
+        invitation2.setStatus(StateInvitation.REJECTED);
+        repository.save(invitation2);
+
+        List<InvitationDto> invitations = service.getAllSent(sender.getId(), null, null,
+                StateInvitation.REJECTED);
+
+        assertThat(invitations).hasSize(1)
+                .doesNotContain(InvitationMapper.toInvitationDto(invitation1))
                 .contains(InvitationMapper.toInvitationDto(invitation2));
     }
 
@@ -143,7 +165,7 @@ class InvitationServiceImplTest {
                 .build());
 
         List<InvitationDto> invitations = service.getAllSent(sender.getId(), LocalDateTime.now(),
-                LocalDateTime.now().plusDays(5));
+                LocalDateTime.now().plusDays(5), null);
 
         assertThat(invitations).hasSize(1)
                 .contains(InvitationMapper.toInvitationDto(invitation1))
@@ -166,11 +188,38 @@ class InvitationServiceImplTest {
                 .status(StateInvitation.NEW)
                 .build());
 
-        List<InvitationDto> invitations = service.getAllReceived(recipient.getId(), null, null);
+        List<InvitationDto> invitations = service.getAllReceived(recipient.getId(), null, null, null);
 
         assertThat(invitations).hasSize(2)
                 .contains(InvitationMapper.toInvitationDto(invitation1))
                 .contains(InvitationMapper.toInvitationDto(invitation2));
+    }
+
+    @Test
+    void getAllReceivedStatus() {
+        Invitation invitation1 = repository.save(Invitation.builder()
+                .sender(sender)
+                .recipient(recipient)
+                .event(event1)
+                .status(StateInvitation.NEW)
+                .build());
+
+        Invitation invitation2 = repository.save(Invitation.builder()
+                .sender(sender)
+                .recipient(recipient)
+                .event(event2)
+                .status(StateInvitation.NEW)
+                .build());
+
+        invitation1.setStatus(StateInvitation.ACCEPTED);
+        repository.save(invitation1);
+
+        List<InvitationDto> invitations = service.getAllReceived(recipient.getId(), null, null,
+                StateInvitation.ACCEPTED);
+
+        assertThat(invitations).hasSize(1)
+                .contains(InvitationMapper.toInvitationDto(invitation1))
+                .doesNotContain(InvitationMapper.toInvitationDto(invitation2));
     }
 
     @Test
@@ -190,7 +239,7 @@ class InvitationServiceImplTest {
                 .build());
 
         List<InvitationDto> invitations = service.getAllReceived(recipient.getId(), LocalDateTime.now().plusDays(6),
-                LocalDateTime.now().plusMonths(2));
+                LocalDateTime.now().plusMonths(2), null);
 
         assertThat(invitations).hasSize(1)
                 .doesNotContain(InvitationMapper.toInvitationDto(invitation1))

@@ -1,6 +1,7 @@
 package ru.practicum.ewm.ewmService.service;
 
 import ru.practicum.ewm.ewmService.model.invitation.InvitationDto;
+import ru.practicum.ewm.ewmService.model.invitation.StateInvitation;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -10,16 +11,18 @@ public interface InvitationService {
     /**
      * Метод принимает в качестве параметров дату и время начала периода @param LocalDateTime start
      * и конца переода @param LocalDateTime end в котором происходит мероприятие,
-     * а также идентификатор пользователя осуществившего запрос @param Long senderId.
+     * а также идентификатор пользователя осуществившего запрос @param Long senderId
+     * и статус @param StateInvitation status.
      */
-    List<InvitationDto> getAllSent(Long userId, LocalDateTime start, LocalDateTime end);
+    List<InvitationDto> getAllSent(Long userId, LocalDateTime start, LocalDateTime end, StateInvitation status);
 
     /**
      * Метод принимает в качестве параметров дату и время начала периода @param LocalDateTime start
      * и конца периода @param LocalDateTime end в котором происходит мероприятие,
-     * а также идентификатор пользователя осуществившего запрос @param Long recipientId.
+     * а также идентификатор пользователя осуществившего запрос @param Long recipientId
+     * и статус @param StateInvitation status.
      */
-    List<InvitationDto> getAllReceived(Long userId, LocalDateTime start, LocalDateTime end);
+    List<InvitationDto> getAllReceived(Long userId, LocalDateTime start, LocalDateTime end, StateInvitation status);
 
     /**
      * Метод возвращает приглашение по идентификатору

@@ -42,7 +42,8 @@ public class InvitationServiceImpl implements InvitationService {
     @PersistenceContext
     private EntityManager entityManager;
 
-    public InvitationServiceImpl(InvitationRepository repository, UserRepository userRepository, EventRepository eventRepository, RequestService requestService) {
+    public InvitationServiceImpl(InvitationRepository repository, UserRepository userRepository,
+                                 EventRepository eventRepository, RequestService requestService) {
         this.repository = repository;
         this.userRepository = userRepository;
         this.eventRepository = eventRepository;
@@ -51,13 +52,14 @@ public class InvitationServiceImpl implements InvitationService {
 
     @Override
     public List<InvitationDto> getAllSent(Long userId, LocalDateTime start,
-                                          LocalDateTime end) {
-        return getAll(userId, start, end, true);
+                                          LocalDateTime end, StateInvitation status) {
+        return getAll(userId, start, end, status, true);
     }
 
     @Override
-    public List<InvitationDto> getAllReceived(Long userId, LocalDateTime start, LocalDateTime end) {
-        return getAll(userId, start, end, false);
+    public List<InvitationDto> getAllReceived(Long userId, LocalDateTime start,
+                                              LocalDateTime end, StateInvitation status) {
+        return getAll(userId, start, end, status, false);
     }
 
     @Override
@@ -122,7 +124,8 @@ public class InvitationServiceImpl implements InvitationService {
                 .orElseThrow(() -> new NotFoundException(String.format(INVITATIONS_NOT_FOUND + "for recipient %d", id,
                         recipientId)));
 
-        if (invitation.getSender().getId().equals(invitation.getEvent().getInitiator().getId())) {
+        if (invitation.getStatus() == StateInvitation.ACCEPTED ||
+                invitation.getSender().equals(invitation.getEvent().getInitiator())) {
             requestService.cancelForInvitedGuest(invitation.getEvent().getId(), invitation.getRecipient().getId());
         }
 
@@ -132,7 +135,7 @@ public class InvitationServiceImpl implements InvitationService {
     }
 
     private List<InvitationDto> getAll(Long userId, LocalDateTime start,
-                                       LocalDateTime end, boolean isSender) {
+                                       LocalDateTime end, StateInvitation status, boolean isSender) {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Invitation> cq = cb.createQuery(Invitation.class);
         Root<Invitation> invitation = cq.from(Invitation.class);
@@ -148,6 +151,9 @@ public class InvitationServiceImpl implements InvitationService {
         }
         if (end != null) {
             predicates.add(cb.lessThan(invitation.get("event").get("eventDate"), end));
+        }
+        if (status != null) {
+            predicates.add(cb.equal(invitation.get("status"), status));
         }
 
         cq.orderBy(cb.asc(invitation.get("event").get("eventDate")));

@@ -1,8 +1,10 @@
 package ru.practicum.ewm.ewmService.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.ewmService.model.invitation.InvitationDto;
+import ru.practicum.ewm.ewmService.model.invitation.StateInvitation;
 import ru.practicum.ewm.ewmService.service.InvitationService;
 
 import java.time.LocalDateTime;
@@ -21,18 +23,26 @@ public class InvitationController {
 
     @GetMapping("/sent")
     public List<InvitationDto> getAllSent(@PathVariable(name = "userId") Long senderId,
-                                          @RequestParam(required = false) LocalDateTime start,
-                                          @RequestParam(required = false) LocalDateTime end) {
-        log.info("Get all sent invitations for user {} for events from {} to {}", senderId, start, end);
-        return service.getAllSent(senderId, start, end);
+                                          @RequestParam(required = false)
+                                          @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
+                                          @RequestParam(required = false)
+                                          @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
+                                          @RequestParam(required = false) StateInvitation status) {
+        log.info("Get all sent invitations for user {} for events from {} to {} with state {}",
+                senderId, start, end, status);
+        return service.getAllSent(senderId, start, end, status);
     }
 
     @GetMapping("/received")
     public List<InvitationDto> getAllReceived(@PathVariable(name = "userId") Long recipientId,
-                                              @RequestParam(required = false) LocalDateTime start,
-                                              @RequestParam(required = false) LocalDateTime end) {
-        log.info("Get all received invitations for user {} for events from {} to {}", recipientId, start, end);
-        return service.getAllReceived(recipientId, start, end);
+                                              @RequestParam(required = false)
+                                              @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
+                                              @RequestParam(required = false)
+                                              @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
+                                              @RequestParam(required = false) StateInvitation status) {
+        log.info("Get all received invitations for user {} for events from {} to {} with state {}",
+                recipientId, start, end, status);
+        return service.getAllReceived(recipientId, start, end, status);
     }
 
     @GetMapping("/{id}")
