@@ -81,6 +81,7 @@ public class EventServiceImpl implements EventService {
             predicates.add(cb.lessThan(event.get("eventDate"), getAllEventsRequest.getRangeEnd()));
         }
         if (getAllEventsRequest.getOnlyAvailable() != null && getAllEventsRequest.getOnlyAvailable()) {
+            predicates.add(cb.equal(event.get("onlyInvited"), false));
             predicates.add(cb.or(cb.equal(event.get("participantLimit"), 0), getRequestsPredicate(cb, cq, event)));
         }
         if (getAllEventsRequest.getSort() == null) {
@@ -324,6 +325,7 @@ public class EventServiceImpl implements EventService {
         LocalDateTime eventDate = updateEventRequest.getEventDate();
         Boolean paid = updateEventRequest.getPaid();
         Integer participantLimit = updateEventRequest.getParticipantLimit();
+        Boolean onlyInvited = updateEventRequest.getOnlyInvited();
 
         if (annotation != null) {
             event.setAnnotation(annotation);
@@ -347,6 +349,9 @@ public class EventServiceImpl implements EventService {
         }
         if (participantLimit != null) {
             event.setParticipantLimit(participantLimit);
+        }
+        if (onlyInvited != null) {
+            event.setOnlyInvited(onlyInvited);
         }
         return event;
     }

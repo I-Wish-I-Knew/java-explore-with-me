@@ -30,5 +30,6 @@ public class EventFullDto {
     private final LocalDateTime publishedOn;
     private State state;
     private Long views;
+    private Boolean onlyInvited;
 }
 

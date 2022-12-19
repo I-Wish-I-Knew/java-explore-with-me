@@ -160,6 +160,19 @@ class RequestServiceImplTest {
     }
 
     @Test
+    void saveOnlyInvited() {
+        event.setOnlyInvited(true);
+
+        ForbiddenException onlyInvited = assertThrows(ForbiddenException.class, () -> {
+            service.save(requester.getId(), event.getId());
+        });
+
+        assertThat(onlyInvited.getMessage()).isNotNull()
+                .isEqualTo(String.format("Registration for the event %d is available by invitations only",
+                        event.getId()));
+    }
+
+    @Test
     void saveLimitReached() {
         event.setParticipantLimit(1);
         event.setRequestModeration(false);

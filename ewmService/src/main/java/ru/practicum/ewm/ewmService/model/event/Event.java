@@ -48,4 +48,7 @@ public class Event {
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private State state;
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean onlyInvited = false;
 }

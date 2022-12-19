@@ -31,7 +31,8 @@ public class RequestServiceImpl implements RequestService {
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
 
-    public RequestServiceImpl(RequestRepository repository, UserRepository userRepository, EventRepository eventRepository) {
+    public RequestServiceImpl(RequestRepository repository, UserRepository userRepository,
+                              EventRepository eventRepository) {
         this.repository = repository;
         this.userRepository = userRepository;
         this.eventRepository = eventRepository;
@@ -57,10 +58,12 @@ public class RequestServiceImpl implements RequestService {
             throw new ForbiddenException(String.format("User %d is an initiator of event %d", userId, eventId));
         }
 
-        if (Boolean.TRUE.equals(repository.existsByEventIdAndRequesterId(eventId, userId))) {
-            throw new AlreadyExistsException(String.format("User %d has already sent a request for event %d",
-                    userId, eventId));
+        if (Boolean.TRUE.equals(event.getOnlyInvited())) {
+            throw new ForbiddenException(String.format("Registration for the event %d is available by invitations only",
+                    eventId));
         }
+
+        checkAlreadyExist(eventId, userId);
 
         Request request = RequestMapper.toRequest(event, requester);
         request.setCreated(LocalDateTime.now());
@@ -75,7 +78,7 @@ public class RequestServiceImpl implements RequestService {
                 !event.getParticipantLimit().equals(0)) {
 
             request.setStatus(StateRequest.REJECTED);
-            eventRepository.save(event);
+            repository.save(request);
             throw new ForbiddenException(String.format("Participants limit for event %d has been reached", eventId));
 
         } else {
@@ -92,5 +95,38 @@ public class RequestServiceImpl implements RequestService {
                 .orElseThrow(() -> new NotFoundException(String.format(REQUEST_NOT_FOUND, requestId)));
         request.setStatus(StateRequest.CANCELED);
         return RequestMapper.toRequestDto(repository.save(request));
+    }
+
+    @Transactional
+    @Override
+    public void reserveForInvitedGuest(Event event, User guest) {
+        checkAlreadyExist(event.getId(), guest.getId());
+        Request request = RequestMapper.toRequest(event, guest);
+        request.setCreated(LocalDateTime.now());
+
+        if (event.getParticipantLimit() == null || event.getParticipantLimit().equals(0)) {
+            request.setStatus(StateRequest.CONFIRMED);
+        } else {
+            request.setStatus(StateRequest.REJECTED);
+            repository.save(request);
+            throw new ForbiddenException(String.format("Participants limit for event %d has been reached", event.getId()));
+        }
+        repository.save(request);
+    }
+
+    @Transactional
+    @Override
+    public void cancelForInvitedGuest(Long eventId, Long guestId) {
+        Request request = repository.findByRequesterIdAndEventId(guestId, eventId)
+                .orElseThrow(() -> new NotFoundException(String.format(REQUEST_NOT_FOUND, guestId)));
+        request.setStatus(StateRequest.CANCELED);
+        repository.save(request);
+    }
+
+    private void checkAlreadyExist(Long eventId, Long userId) {
+        if (Boolean.TRUE.equals(repository.existsByEventIdAndRequesterId(eventId, userId))) {
+            throw new AlreadyExistsException(String.format("User %d has already sent a request for event %d",
+                    userId, eventId));
+        }
     }
 }

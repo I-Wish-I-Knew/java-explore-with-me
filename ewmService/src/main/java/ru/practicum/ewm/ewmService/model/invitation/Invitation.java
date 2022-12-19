@@ -1,4 +1,4 @@
-package ru.practicum.ewm.ewmService.model.request;
+package ru.practicum.ewm.ewmService.model.invitation;
 
 import lombok.*;
 import ru.practicum.ewm.ewmService.model.event.Event;
@@ -14,22 +14,24 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "participation_requests")
-public class Request {
+@Table(name = "invitations")
+public class Invitation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "request_id", nullable = false)
+    @Column(name = "invitation_id", nullable = false)
     private Long id;
     @Column(nullable = false)
-    private LocalDateTime created = LocalDateTime.now();
+    private final LocalDateTime created = LocalDateTime.now();
     @ManyToOne
     @JoinColumn(name = "event_id", nullable = false)
     private Event event;
     @ManyToOne
-    @JoinColumn(name = "requester_id", nullable = false)
-    private User requester;
+    @JoinColumn(name = "sender_id", nullable = false)
+    private User sender;
+    @ManyToOne
+    @JoinColumn(name = "recipient_id", nullable = false)
+    private User recipient;
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private StateRequest status;
-
+    private StateInvitation status;
 }

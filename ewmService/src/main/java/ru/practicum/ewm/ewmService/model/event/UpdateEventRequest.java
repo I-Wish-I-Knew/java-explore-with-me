@@ -1,6 +1,7 @@
 package ru.practicum.ewm.ewmService.model.event;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.jackson.Jacksonized;
@@ -15,6 +16,7 @@ import static ru.practicum.ewm.ewmService.utility.Constants.DATE_FORMAT_PATTERN;
 @Data
 @Builder
 @Jacksonized
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class UpdateEventRequest {
     @NotNull
     private Long eventId;
@@ -29,6 +31,8 @@ public class UpdateEventRequest {
     private LocalDateTime eventDate;
     private Boolean paid;
     private Integer participantLimit;
+    @Builder.Default
+    private Boolean onlyInvited = false;
 
     @AssertTrue(message = "Event date must be at least two hours after the publication")
     private boolean isAfter() {
