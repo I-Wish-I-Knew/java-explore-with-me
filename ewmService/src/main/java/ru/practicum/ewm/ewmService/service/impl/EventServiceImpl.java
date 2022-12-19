@@ -128,13 +128,20 @@ public class EventServiceImpl implements EventService {
         Event event = repository.findByIdAndInitiatorId(updateEventRequest.getEventId(), userId)
                 .orElseThrow(() -> new NotFoundException(String.format(EVENT_NOT_FOUND_BY_USER,
                         updateEventRequest.getEventId(), userId)));
+
         if (event.getState() == State.PUBLISHED) {
             throw new ForbiddenException("Only pending or canceled events can be changed");
         }
+
         if (event.getState() == State.CANCELED) {
             event.setState(State.PENDING);
         }
-        Event updatedEvent = updateEventFields(event, updateEventRequest);
+
+        Optional.ofNullable(updateEventRequest.getOnlyInvited()).ifPresent(event::setOnlyInvited);
+        Event updatedEvent = updateEvent(event, updateEventRequest.getAnnotation(), updateEventRequest.getTitle(),
+                updateEventRequest.getEventDate(), updateEventRequest.getDescription(), updateEventRequest.getPaid(),
+                updateEventRequest.getParticipantLimit(), updateEventRequest.getCategory());
+
         return convertToEventFullDto(repository.save(updatedEvent));
     }
 
@@ -252,7 +259,15 @@ public class EventServiceImpl implements EventService {
     public EventFullDto editEvent(NewEventDto newEventDto, Long id) {
         Event event = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException(String.format(EVENT_NOT_FOUND, id)));
-        Event updatedEvent = updateEventFieldsAdmin(event, newEventDto);
+
+        Optional.ofNullable(newEventDto.getLocation()).ifPresent(location ->
+                event.setLocation(new Location(location.getLat(), location.getLon())));
+        Optional.ofNullable(newEventDto.getRequestModeration()).ifPresent(event::setRequestModeration);
+
+        Event updatedEvent = updateEvent(event, newEventDto.getAnnotation(), newEventDto.getTitle(),
+                newEventDto.getEventDate(), newEventDto.getDescription(), newEventDto.getPaid(),
+                newEventDto.getParticipantLimit(), newEventDto.getCategory());
+
         return convertToEventFullDto(repository.save(updatedEvent));
     }
 
@@ -317,81 +332,19 @@ public class EventServiceImpl implements EventService {
         return participantLimit != 0 && participantLimit == confirmedRequests;
     }
 
-    private Event updateEventFields(Event event, UpdateEventRequest updateEventRequest) {
-        String annotation = updateEventRequest.getAnnotation();
-        String title = updateEventRequest.getTitle();
-        Long categoryId = updateEventRequest.getCategory();
-        String description = updateEventRequest.getDescription();
-        LocalDateTime eventDate = updateEventRequest.getEventDate();
-        Boolean paid = updateEventRequest.getPaid();
-        Integer participantLimit = updateEventRequest.getParticipantLimit();
-        Boolean onlyInvited = updateEventRequest.getOnlyInvited();
+    private Event updateEvent(Event event, String annotation,
+                              String title, LocalDateTime eventDate,
+                              String description, Boolean paid,
+                              Integer participantLimit, Long category) {
+        Optional.ofNullable(annotation).ifPresent(event::setAnnotation);
+        Optional.ofNullable(title).ifPresent(event::setTitle);
+        Optional.ofNullable(eventDate).ifPresent(event::setEventDate);
+        Optional.ofNullable(description).ifPresent(event::setDescription);
+        Optional.ofNullable(paid).ifPresent(event::setPaid);
+        Optional.ofNullable(category).ifPresent(categoryId -> event.setCategory(categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new NotFoundException(String.format(CATEGORY_NOT_FOUND, categoryId)))));
+        Optional.ofNullable(participantLimit).ifPresent(event::setParticipantLimit);
 
-        if (annotation != null) {
-            event.setAnnotation(annotation);
-        }
-        if (title != null) {
-            event.setTitle(title);
-        }
-        if (categoryId != null) {
-            Category category = categoryRepository.findById(categoryId)
-                    .orElseThrow(() -> new NotFoundException(String.format(CATEGORY_NOT_FOUND, categoryId)));
-            event.setCategory(category);
-        }
-        if (description != null) {
-            event.setDescription(description);
-        }
-        if (eventDate != null) {
-            event.setEventDate(eventDate);
-        }
-        if (paid != null) {
-            event.setPaid(paid);
-        }
-        if (participantLimit != null) {
-            event.setParticipantLimit(participantLimit);
-        }
-        if (onlyInvited != null) {
-            event.setOnlyInvited(onlyInvited);
-        }
-        return event;
-    }
-
-    private Event updateEventFieldsAdmin(Event event, NewEventDto eventDto) {
-        String annotation = eventDto.getAnnotation();
-        String title = eventDto.getTitle();
-        Long categoryId = eventDto.getCategory();
-        String description = eventDto.getDescription();
-        LocalDateTime eventDate = eventDto.getEventDate();
-        Boolean paid = eventDto.getPaid();
-        Integer participantLimit = eventDto.getParticipantLimit();
-        Boolean requestModeration = eventDto.getRequestModeration();
-
-        if (annotation != null) {
-            event.setAnnotation(annotation);
-        }
-        if (title != null) {
-            event.setTitle(title);
-        }
-        if (categoryId != null) {
-            Category category = categoryRepository.findById(categoryId)
-                    .orElseThrow(() -> new NotFoundException(String.format(CATEGORY_NOT_FOUND, categoryId)));
-            event.setCategory(category);
-        }
-        if (description != null) {
-            event.setDescription(description);
-        }
-        if (eventDate != null) {
-            event.setEventDate(eventDate);
-        }
-        if (paid != null) {
-            event.setPaid(paid);
-        }
-        if (participantLimit != null) {
-            event.setParticipantLimit(participantLimit);
-        }
-        if (requestModeration != null) {
-            event.setRequestModeration(requestModeration);
-        }
         return event;
     }
 
