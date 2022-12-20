@@ -11,8 +11,6 @@ import ru.practicum.ewm.statisticService.model.EndpointHitDto;
 import ru.practicum.ewm.statisticService.model.ViewPoints;
 import ru.practicum.ewm.statisticService.repository.StatRepository;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -72,8 +70,8 @@ class StatServiceImplTest {
                 .timestamp(LocalDateTime.now())
                 .build());
 
-        String start = encodeDate(endpointHit.getTimestamp().minusDays(1).withNano(0));
-        String end = encodeDate(endpointHit.getTimestamp().plusDays(1).withNano(0));
+        String start = getDateForRequest(endpointHit.getTimestamp().minusDays(1));
+        String end = getDateForRequest(endpointHit.getTimestamp().plusDays(1));
 
         List<ViewPoints> viewPoints = service.get(start, end, Collections.singletonList(endpointHit.getUri()),
                 false);
@@ -102,8 +100,8 @@ class StatServiceImplTest {
                 .timestamp(LocalDateTime.now())
                 .build());
 
-        String start = encodeDate(endpointHit1.getTimestamp().minusDays(1).withNano(0));
-        String end = encodeDate(endpointHit1.getTimestamp().plusDays(1).withNano(0));
+        String start = getDateForRequest(endpointHit1.getTimestamp().minusDays(1));
+        String end = getDateForRequest(endpointHit1.getTimestamp().plusDays(1));
 
         List<ViewPoints> viewPoints = service.get(start, end, Collections.singletonList(endpointHit1.getUri()),
                 true);
@@ -116,8 +114,7 @@ class StatServiceImplTest {
                         .build());
     }
 
-    private String encodeDate(LocalDateTime date) {
-        String value = date.toString().replace("T", " ");
-        return URLEncoder.encode(value, StandardCharsets.UTF_8);
+    private String getDateForRequest(LocalDateTime date) {
+        return date.withNano(0).toString().replace("T", " ");
     }
 }

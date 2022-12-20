@@ -35,6 +35,7 @@
 		<commons-lang3.version>3.12.0</commons-lang3.version>
 		<slf4j-api.version>1.7.30</slf4j-api.version>
 	</properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
