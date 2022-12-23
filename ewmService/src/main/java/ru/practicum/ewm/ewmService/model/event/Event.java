@@ -36,8 +36,10 @@ public class Event {
     @Column(nullable = false)
     private Boolean paid;
     @Column(nullable = false)
+    @Builder.Default
     private Integer participantLimit = 0;
     @Column(nullable = false)
+    @Builder.Default
     private Boolean requestModeration = false;
     @ManyToOne
     @JoinColumn(name = "initiator_id", nullable = false)

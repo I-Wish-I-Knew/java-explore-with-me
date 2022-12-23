@@ -9,8 +9,6 @@ import ru.practicum.ewm.ewmService.service.StatService;
 import ru.practicum.ewm.ewmService.statClient.StatClient;
 
 import javax.servlet.http.HttpServletRequest;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -40,10 +38,10 @@ public class StatServiceImpl implements StatService {
             return new HashMap<>();
         }
 
-        String startEncoded = encodeDate(firstEvent.get().getCreatedOn().withNano(0));
-        String endEncoded = encodeDate(LocalDateTime.now().withNano(0));
+        String start = getDateForRequest(firstEvent.get().getCreatedOn());
+        String end = getDateForRequest(LocalDateTime.now());
         List<String> uris = getUris(events);
-        List<ViewPoints> viewPoints = client.get(startEncoded, endEncoded, uris, unique);
+        List<ViewPoints> viewPoints = client.get(start, end, uris, unique);
         Map<Long, Long> eventViews = new HashMap<>();
 
         viewPoints.forEach(viewPoint -> eventViews.put(getIdFromUri(viewPoint.getUri()), viewPoint.getHits()));
@@ -53,8 +51,8 @@ public class StatServiceImpl implements StatService {
 
     @Override
     public Long getViewsForEvent(Event event, Boolean unique) {
-        List<ViewPoints> views = client.get(encodeDate(event.getCreatedOn().withNano(0)),
-                encodeDate(LocalDateTime.now().withNano(0)),
+        List<ViewPoints> views = client.get(getDateForRequest(event.getCreatedOn()),
+                getDateForRequest(LocalDateTime.now()),
                 List.of(String.format(BASE_URI_EVENT_VIEW, event.getId())),
                 unique);
 
@@ -80,12 +78,11 @@ public class StatServiceImpl implements StatService {
                 .build();
     }
 
-    private String encodeDate(LocalDateTime date) {
-        String value = date.toString().replace("T", " ");
-        return URLEncoder.encode(value, StandardCharsets.UTF_8);
-    }
-
     private Long getIdFromUri(String uri) {
         return Long.parseLong(StringUtils.getDigits(uri));
+    }
+
+    private String getDateForRequest(LocalDateTime date) {
+        return date.withNano(0).toString().replace("T", " ");
     }
 }

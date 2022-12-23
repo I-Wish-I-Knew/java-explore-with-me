@@ -3,6 +3,7 @@ package ru.practicum.ewm.ewmService.service.impl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 import ru.practicum.ewm.ewmService.controller.eventRequests.GetAllAdminRequest;
 import ru.practicum.ewm.ewmService.controller.eventRequests.GetAllRequest;
 import ru.practicum.ewm.ewmService.exception.ForbiddenException;
@@ -58,13 +59,16 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<EventShortDto> getAll(GetAllRequest getAllEventsRequest, HttpServletRequest request) {
         statService.saveHit(request);
+
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Event> cq = cb.createQuery(Event.class);
         Root<Event> event = cq.from(Event.class);
         List<Predicate> predicates = new ArrayList<>();
         predicates.add(cb.equal(event.get("state"), State.PUBLISHED));
 
-        if (getAllEventsRequest.getText() != null && !getAllEventsRequest.getText().isEmpty()) {
+        String eventDateField = "eventDate";
+
+        if (StringUtils.hasText(getAllEventsRequest.getText())) {
             predicates.add(cb.or(cb.like(cb.lower(event.get("annotation")), getAllEventsRequest.getText().toLowerCase()),
                     cb.like(cb.lower(event.get("description")), getAllEventsRequest.getText().toLowerCase())));
         }
@@ -75,10 +79,10 @@ public class EventServiceImpl implements EventService {
             predicates.add(cb.equal(event.get("paid"), getAllEventsRequest.getPaid()));
         }
         if (getAllEventsRequest.getRangeStart() != null) {
-            predicates.add(cb.greaterThan(event.get("eventDate"), getAllEventsRequest.getRangeStart()));
+            predicates.add(cb.greaterThan(event.get(eventDateField), getAllEventsRequest.getRangeStart()));
         }
         if (getAllEventsRequest.getRangeEnd() != null) {
-            predicates.add(cb.lessThan(event.get("eventDate"), getAllEventsRequest.getRangeEnd()));
+            predicates.add(cb.lessThan(event.get(eventDateField), getAllEventsRequest.getRangeEnd()));
         }
         if (getAllEventsRequest.getOnlyAvailable() != null && getAllEventsRequest.getOnlyAvailable()) {
             predicates.add(cb.equal(event.get("onlyInvited"), false));
@@ -88,7 +92,7 @@ public class EventServiceImpl implements EventService {
             cq.orderBy(cb.desc(event.get("id")));
         }
         if (getAllEventsRequest.getSort() == SortEvents.EVENT_DATE) {
-            cq.orderBy(cb.asc(event.get("eventDate")));
+            cq.orderBy(cb.asc(event.get(eventDateField)));
         }
 
         cq.select(event).where(predicates.toArray(new Predicate[]{}));
@@ -353,7 +357,7 @@ public class EventServiceImpl implements EventService {
                 .map(Event::getId)
                 .collect(Collectors.toList());
         Map<Long, Long> confirmedRequests = new HashMap<>();
-        for (Long[] entry : repository.countAllByStatusAndEventIdIn(StateRequest.CONFIRMED.name(), eventIds)) {
+        for (Long[] entry : repository.countRequestsForEventsByStatusAndEventIdIn(StateRequest.CONFIRMED.name(), eventIds)) {
             confirmedRequests.put(entry[0], entry[1]);
         }
         return confirmedRequests;

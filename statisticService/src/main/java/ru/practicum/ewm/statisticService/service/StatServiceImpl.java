@@ -7,7 +7,6 @@ import ru.practicum.ewm.statisticService.model.EndpointHitDto;
 import ru.practicum.ewm.statisticService.model.ViewPoints;
 import ru.practicum.ewm.statisticService.repository.StatRepository;
 
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -31,15 +30,16 @@ public class StatServiceImpl implements StatService {
 
     @Override
     public List<ViewPoints> get(String start, String end, List<String> uris, Boolean unique) {
-        LocalDateTime startTime = LocalDateTime.parse(decode(start), FORMATTER);
-        LocalDateTime endTime = LocalDateTime.parse(decode(end), FORMATTER);
+        LocalDateTime startTime = LocalDateTime.parse(start, FORMATTER);
+        LocalDateTime endTime = LocalDateTime.parse(end, FORMATTER);
 
         if (uris == null || uris.isEmpty()) {
             return new ArrayList<>();
         }
 
-        List<ViewPoints> viewPoints = Boolean.TRUE.equals(unique) ? repository.countByTimestampAndUriSAndIpUnique(startTime, endTime, uris) :
-                repository.countByTimestampAndUris(startTime, endTime, uris);
+        List<ViewPoints> viewPoints = Boolean.TRUE.equals(unique)
+                ? repository.countByTimestampAndUriSAndIpUnique(startTime, endTime, uris)
+                : repository.countByTimestampAndUris(startTime, endTime, uris);
 
         for (String uri : uris) {
             if (viewPoints.stream().noneMatch(vp -> vp.getUri().equals(uri))) {
@@ -51,9 +51,5 @@ public class StatServiceImpl implements StatService {
             }
         }
         return viewPoints;
-    }
-
-    private String decode(String encoded) {
-        return java.net.URLDecoder.decode(encoded, StandardCharsets.UTF_8);
     }
 }
