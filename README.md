@@ -1,7 +1,7 @@
 # java-explore-with-me
 Template repository for ExploreWithMe project.
 
-[Pull request](https://github.com/I-Wish-I-Knew/java-explore-with-me/pull/2#issue-1445108678)
+[Repository](https://github.com/I-Wish-I-Knew/java-explore-with-me)
 
 This service is designed to help people quickly and easily find events they are interested in 
 and share information about upcoming events with other users.
